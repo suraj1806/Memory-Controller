@@ -1,0 +1,121 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 19.07.2024 02:50:44
+// Design Name: 
+// Module Name: Training_tb
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module Training_tb();
+
+    reg clk;
+    reg reset;
+    reg enable;
+    reg req;
+    reg rw;
+    reg [3:0] addr;
+    reg [3:0] Di;
+
+    wire [3:0] Do;
+    wire valid;
+    wire [1:0] ar;
+    wire [1:0] ac;
+    wire ready;
+
+    ram_controller uut (
+        .clk(clk),
+        .reset(reset),
+        .enable(enable),
+        .req(req),
+        .rw(rw),
+        .addr(addr),
+        .Di(Di),
+        .Do(Do),
+        .valid(valid),
+        .ar(ar),
+        .ac(ac),
+        .ready(ready)
+    );
+
+    initial begin
+        clk = 0;
+        forever #5 clk = ~clk;
+    end
+
+    initial begin
+        reset = 1;
+        enable = 0;
+        req = 0;
+        rw = 0;
+        addr = 4'b0;
+        Di = 4'b0;
+
+        #20;
+        reset = 0;
+
+        // Write 'A' to address 0x3
+        @(posedge clk);
+        enable = 1;
+        addr = 4'b0011;
+        Di = 4'b1010;
+        req = 1;
+        rw = 0;
+        @(posedge clk);
+        req = 0;
+        enable = 0;
+        #10;
+
+        // Read from address 0x3
+        @(posedge clk);
+        enable = 1;
+        addr = 4'b0011;
+        req = 1;
+        rw = 1;
+        @(posedge clk);
+        req = 0;
+        enable = 0;
+        #10;
+
+        // Write 'B' to address 0x1
+        @(posedge clk);
+        enable = 1;
+        addr = 4'b0001;
+        Di = 4'b1011;
+        req = 1;
+        rw = 0;
+        @(posedge clk);
+        req = 0;
+        enable = 0;
+        #10;
+
+        // Read from address 0x1
+        @(posedge clk);
+        enable = 1;
+        addr = 4'b0001;
+        req = 1;
+        rw = 1;
+        @(posedge clk);
+        req = 0;
+        enable = 0;
+        #10;
+
+       
+
+        $stop;
+    end
+
+endmodule
