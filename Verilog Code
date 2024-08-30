@@ -1,0 +1,103 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 19.07.2024 02:49:34
+// Design Name: 
+// Module Name: training
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module training (
+    input clk,
+    input reset,
+    input req,
+    input rw,
+    input [1:0] ar,
+    input [1:0] ac,
+    input [3:0] Di,
+    output reg [3:0] Do,
+    output reg valid
+);
+    reg [3:0] ram [7:0][7:0];
+    integer r, c;
+
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            for (r = 0; r < 8; r = r + 1) begin
+                for (c = 0; c < 8; c = c + 1) begin
+                    ram[r][c] <= 4'b0;
+                end
+            end
+            Do <= 4'b0;
+            valid <= 1'b0;
+        end else if (req) begin
+            if (rw) begin
+                Do <= ram[ar][ac]; // Read operation
+                valid <= 1'b1;
+            end else begin
+                ram[ar][ac] <= Di; // Write operation
+                valid <= 1'b0;
+            end
+        end else begin
+            valid <= 1'b0;
+        end
+    end
+endmodule
+
+
+module ram_controller (
+    input clk,
+    input reset,
+    input enable,
+    input req,
+    input rw,
+    input [3:0] addr,
+    input [3:0] Di,
+    output [3:0] Do,
+    output valid,
+    output [1:0] ar,
+    output [1:0] ac,
+    output reg ready
+);
+    reg [3:0] addr_reg;
+
+    assign ar = addr_reg[3:2];
+    assign ac = addr_reg[1:0];
+
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            addr_reg <= 4'b0;
+            ready <= 1'b0;
+        end else if (enable) begin
+            addr_reg <= addr;
+            ready <= 1'b1;
+        end else begin
+            ready <= 1'b0;
+        end
+    end
+
+    training training_inst (
+        .clk(clk),
+        .reset(reset),
+        .req(req && enable), // Ensure req is only high when enable is high
+        .rw(rw),
+        .ar(ar),
+        .ac(ac),
+        .Di(Di),
+        .Do(Do),
+        .valid(valid)
+    );
+endmodule
